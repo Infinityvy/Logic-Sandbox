@@ -9,13 +9,13 @@ public class LevelManager : MonoBehaviour
     
     void Start()
     {
-        int [,] world = new int[LevelData.size, LevelData.size];
+        Tile[,] world = new Tile[LevelData.size, LevelData.size];
 
         for(int x = 0; x < LevelData.size; x++)
         {
             for(int y = 0; y < LevelData.size; y++)
             {
-                world[x, y] = 0;
+                world[x, y] = new Tile_empty();
             }
         }
 

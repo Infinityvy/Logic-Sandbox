@@ -24,7 +24,7 @@ public class BuildController : MonoBehaviour
         {
             Vector2Int cursorTilePos = getCursorTilePos();
 
-            if(checkCursorInBounds(cursorTilePos)) setTile(cursorTilePos, 6);
+            if(checkCursorInBounds(cursorTilePos)) setTile(cursorTilePos, new Tile_lamp());
         }
         else if (Input.GetKeyDown(InputSettings.interact))
         {
@@ -34,14 +34,22 @@ public class BuildController : MonoBehaviour
         {
             Vector2Int cursorTilePos = getCursorTilePos();
 
-            if(checkCursorInBounds(cursorTilePos)) setTile(cursorTilePos, 0);
+            if(checkCursorInBounds(cursorTilePos)) setTile(cursorTilePos, new Tile_empty());
         }
     }
 
-    private void setTile(Vector2Int pos, int id)
+    private void setTile(Vector2Int pos, Tile tile)
     {
-        LevelData.world[pos.x, pos.y] = id;
-        levelMesh.setUVAt(pos.x, pos.y, id);
+        LevelData.world[pos.x, pos.y] = tile;
+        levelMesh.setUVAt(pos.x, pos.y, tile.id);
+
+        byte[] metadata = tile.metadata;
+
+        for (int i = 0; i < metadata.Length && i < 4; i++)
+        {
+            if (metadata[i] != 0) levelMesh.setUVAt(i + 1, pos.x, pos.y, metadata[i], (Orientation)i, i > 1);
+            else levelMesh.setUVAt(i + 1, pos.x, pos.y, 64, Orientation.north, false);
+        }
     }
 
     private Vector2Int getCursorTilePos()

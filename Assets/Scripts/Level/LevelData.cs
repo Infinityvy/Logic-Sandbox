@@ -4,9 +4,9 @@ using UnityEngine;
 
 public static class LevelData
 {
-    public static int[,] world;
+    public static Tile[,] world;
 
-    public static int size = 16; //Levelsize in Tiles
+    public static int size = 160; //Levelsize in Tiles
 
     public static float tileSize = 0.125f;
 }
