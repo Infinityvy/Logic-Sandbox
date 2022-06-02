@@ -15,4 +15,18 @@ public static class InputSettings
     public static KeyCode place = KeyCode.Mouse0;
     public static KeyCode interact = KeyCode.Mouse2;
     public static KeyCode remove = KeyCode.Mouse1;
+
+    public static KeyCode[] numbers =
+    {
+        KeyCode.Alpha1,
+        KeyCode.Alpha2,
+        KeyCode.Alpha3,
+        KeyCode.Alpha4,
+        KeyCode.Alpha5,
+        KeyCode.Alpha6,
+        KeyCode.Alpha7,
+        KeyCode.Alpha8,
+        KeyCode.Alpha9,
+        KeyCode.Alpha0
+    };
 }

@@ -4,7 +4,9 @@ using UnityEngine;
 
 public class Tile_lamp : Tile
 {
-    public override int id { get; } = 5;
+    public override byte id { get; protected set; } = 5;
 
-    public override byte[] metadata { set; get; } = {11, 13, 11, 13 };
+    public override byte[] metadata { set; get; } = {11, 13, 13, 11 };
+
+    public Tile_lamp(Vector2Int position) : base(position) { }
 }

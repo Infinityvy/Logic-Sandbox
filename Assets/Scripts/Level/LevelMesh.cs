@@ -15,7 +15,7 @@ public class LevelMesh : MonoBehaviour
 
     private bool[] uvsChanged = {false, false, false, false, false };
 
-    private void Start()
+    private void Awake()
     {
         if (GetComponent<MeshFilter>().mesh == null) GetComponent<MeshFilter>().mesh = new Mesh();
         mesh = GetComponent<MeshFilter>().mesh;
@@ -187,5 +187,5 @@ public class LevelMesh : MonoBehaviour
 
 public enum Orientation
 {
-    north, east, west, south
+    north, east, south, west
 }

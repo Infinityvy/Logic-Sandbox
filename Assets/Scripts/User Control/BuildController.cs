@@ -4,9 +4,17 @@ using UnityEngine;
 
 public class BuildController : MonoBehaviour
 {
+    public static BuildController active;
+
     public LevelMesh levelMesh;
 
     private Camera cam;
+
+
+    private void Awake()
+    {
+        active = this;
+    }
 
     void Start()
     {
@@ -24,21 +32,27 @@ public class BuildController : MonoBehaviour
         {
             Vector2Int cursorTilePos = getCursorTilePos();
 
-            if(checkCursorInBounds(cursorTilePos)) setTile(cursorTilePos, new Tile_lamp());
+            if(checkCursorInBounds(cursorTilePos)) setTile(cursorTilePos, InventoryController.active.GetSelectedTile(cursorTilePos));
         }
         else if (Input.GetKeyDown(InputSettings.interact))
         {
+            Vector2Int cursorTilePos = getCursorTilePos();
 
+            LevelData.world[cursorTilePos.x, cursorTilePos.y].interact();
         }
         else if (Input.GetKeyDown(InputSettings.remove))
         {
             Vector2Int cursorTilePos = getCursorTilePos();
 
-            if(checkCursorInBounds(cursorTilePos)) setTile(cursorTilePos, new Tile_empty());
+            if (checkCursorInBounds(cursorTilePos))
+            {
+                byte[] old_metadata = LevelData.world[cursorTilePos.x, cursorTilePos.y].metadata;
+                setTile(cursorTilePos, new Tile_empty(cursorTilePos, old_metadata));
+            }
         }
     }
 
-    private void setTile(Vector2Int pos, Tile tile)
+    public void setTile(Vector2Int pos, Tile tile)
     {
         LevelData.world[pos.x, pos.y] = tile;
         levelMesh.setUVAt(pos.x, pos.y, tile.id);
