@@ -13,7 +13,7 @@ public static class InputSettings
     public static KeyCode right = KeyCode.D;
 
     public static KeyCode place = KeyCode.Mouse0;
-    public static KeyCode interact = KeyCode.Mouse2;
+    public static KeyCode interact = KeyCode.Space;
     public static KeyCode remove = KeyCode.Mouse1;
 
     public static KeyCode[] numbers =

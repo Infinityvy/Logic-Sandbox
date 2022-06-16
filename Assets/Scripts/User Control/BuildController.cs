@@ -1,12 +1,19 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class BuildController : MonoBehaviour
 {
     public static BuildController active;
 
     public LevelMesh levelMesh;
+
+    public TextMeshProUGUI tooltip;
+    public Transform selectionOutline;
+
+    private Vector2Int cursorTilePos;
+
 
     private Camera cam;
 
@@ -23,32 +30,28 @@ public class BuildController : MonoBehaviour
 
     void Update()
     {
+        cursorTilePos = getCursorTilePos();
+        if (!checkCursorInBounds(cursorTilePos)) return;
+
         interactWithLevel();
+        manageUI();
     }
 
     private void interactWithLevel()
     {
-        if(Input.GetKeyDown(InputSettings.place))
-        {
-            Vector2Int cursorTilePos = getCursorTilePos();
 
-            if(checkCursorInBounds(cursorTilePos)) setTile(cursorTilePos, InventoryController.active.GetSelectedTile(cursorTilePos));
+        if (Input.GetKeyDown(InputSettings.place))
+        {
+            setTile(cursorTilePos, InventoryController.active.GetSelectedTile(cursorTilePos));
         }
         else if (Input.GetKeyDown(InputSettings.interact))
         {
-            Vector2Int cursorTilePos = getCursorTilePos();
-
             LevelData.world[cursorTilePos.x, cursorTilePos.y].interact();
         }
         else if (Input.GetKeyDown(InputSettings.remove))
         {
-            Vector2Int cursorTilePos = getCursorTilePos();
-
-            if (checkCursorInBounds(cursorTilePos))
-            {
-                byte[] old_metadata = LevelData.world[cursorTilePos.x, cursorTilePos.y].metadata;
-                setTile(cursorTilePos, new Tile_empty(cursorTilePos, old_metadata));
-            }
+            byte[] old_metadata = LevelData.world[cursorTilePos.x, cursorTilePos.y].metadata;
+            setTile(cursorTilePos, new Tile_empty(cursorTilePos, old_metadata));
         }
     }
 
@@ -66,6 +69,11 @@ public class BuildController : MonoBehaviour
         }
     }
 
+    private Tile getTile(Vector2Int pos)
+    {
+        return LevelData.world[pos.x, pos.y];
+    }
+
     private Vector2Int getCursorTilePos()
     {
         Vector3 cursorWorldPos = cam.ScreenToWorldPoint(Input.mousePosition);
@@ -76,5 +84,19 @@ public class BuildController : MonoBehaviour
     {
         return (cursorTilePos.x >= 0 && cursorTilePos.y >= 0 && 
                 cursorTilePos.x < LevelData.size && cursorTilePos.y < LevelData.size);
+    }
+
+    private void manageUI()
+    {
+        selectionOutline.position = new Vector3(cursorTilePos.x + 0.5f, 1, cursorTilePos.y + 0.5f);
+
+        Tile hoveredTile = getTile(cursorTilePos);
+        if (hoveredTile is Tile_wire) // sets the cursor tooltip text
+        {
+            tooltip.text = hoveredTile.metadata[4].ToString();
+
+            tooltip.transform.position = Input.mousePosition;
+        }
+        else tooltip.text = "";
     }
 }

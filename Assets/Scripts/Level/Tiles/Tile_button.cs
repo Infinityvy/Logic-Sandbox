@@ -14,17 +14,7 @@ public class Tile_button : Tile
     {
         if (state)
         {
-            powered = true;
-
-            for (int i = 0; i < 4; i++)
-            {
-                Tile neighbour = getNeighbourByIndex(i);
-                if (neighbour == null) continue;
-                if (LogicManager.isOutputID(metadata[i]) && !neighbour.getPowered() && LogicManager.isInputID(neighbour.metadata[(i + 2) % 4])) // checks if this tile output at i and neighbour has input at opposite of i
-                {
-                    neighbour.setPowered(true);
-                }
-            }
+            base.setPowered(state);
         }
         else
         {
@@ -36,7 +26,7 @@ public class Tile_button : Tile
             {
                 Tile neighbour = getNeighbourByIndex(i);
                 if (neighbour == null) continue;
-                if (LogicManager.isOutputID(metadata[i]) && neighbour.getPowered() && LogicManager.isInputID(neighbour.metadata[(i + 2) % 4])) // checks if this tile output at i and neighbour has input at opposite of i
+                if (LogicManager.isOutputID(metadata[i]) && (neighbour.getPowered() || neighbour is Tile_wire) && LogicManager.isInputID(neighbour.metadata[(i + 2) % 4])) // checks if this tile output at i and neighbour has input at opposite of i
                 {
                     neighbour.isConnectedToPowerSource();
                 }

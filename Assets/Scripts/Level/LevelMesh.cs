@@ -6,12 +6,15 @@ public class LevelMesh : MonoBehaviour
 {
     private Mesh mesh;
 
+    public UnityEngine.Rendering.IndexFormat indexFormat;
+
     public List<Vector3> vertices;
     public List<int> triangles;
 
     List<Vector2>[] uvs = new List<Vector2>[5];
 
     private int vertexIndex = 0;
+    private int sizeX, sizeY;
 
     private bool[] uvsChanged = {false, false, false, false, false };
 
@@ -19,7 +22,7 @@ public class LevelMesh : MonoBehaviour
     {
         if (GetComponent<MeshFilter>().mesh == null) GetComponent<MeshFilter>().mesh = new Mesh();
         mesh = GetComponent<MeshFilter>().mesh;
-        mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+        mesh.indexFormat = indexFormat;
     }
 
     private void LateUpdate()
@@ -36,31 +39,40 @@ public class LevelMesh : MonoBehaviour
 
     public void generateMesh(Tile[,] world)
     {
+        generateMesh(world, 0);
+    }
+
+    public void generateMesh(Tile[,] world, float gapSize)
+    {
+        sizeX = world.GetLength(0);
+        sizeY = world.GetLength(1);
+
         vertices = new List<Vector3>();
         triangles = new List<int>();
 
         for (int i = 0; i < uvs.Length; i++) uvs[i] = new List<Vector2>();
 
-        for (int y = 0; y < LevelData.size; y++)
+        for (int y = 0; y < sizeY; y++)
         {
-            for(int x = 0; x < LevelData.size; x++)
+            for (int x = 0; x < sizeX; x++)
             {
-                addFace(x, y);
+                addFace(x + gapSize, y + gapSize);
             }
         }
 
         loadMesh();
+        Debug.Log(vertices.Count);
         flushTemporaryFields();
 
-        for (int x = 0; x < LevelData.size; x++)
+        for (int x = 0; x < sizeX; x++)
         {
-            for (int y = 0; y < LevelData.size; y++)
+            for (int y = 0; y < sizeY; y++)
             {
                 setUVAt(x, y, world[x, y].id);
 
                 byte[] metadata = world[x, y].metadata;
 
-                for(int i = 0; i < metadata.Length && i < 4; i++)
+                for (int i = 0; i < metadata.Length && i < 4; i++)
                 {
                     if (metadata[i] != 0) setUVAt(i + 1, x, y, metadata[i], (Orientation)i, i > 1);
                     else setUVAt(i + 1, x, y, 64, Orientation.north, false);
@@ -88,11 +100,10 @@ public class LevelMesh : MonoBehaviour
     {
         vertices.Clear();
         triangles.Clear();
-        //for (int i = 0; i < uvs.Length; i++) uvs[i].Clear();
         vertexIndex = 0;
     }
 
-    private void addFace(int x, int y) //adds a new face on 2D plane; x and y are bottom left corner
+    private void addFace(float x, float y) //adds a new face on 2D plane; x and y are bottom left corner
     {
         vertices.Add(new Vector3(x, 0, y));
         vertices.Add(new Vector3(x + 1, 0, y));
@@ -120,25 +131,13 @@ public class LevelMesh : MonoBehaviour
 
     public void setUVAt(int x, int y, int id) // position in bottom left corner of face
     {
-
-        int posInArray = (x + y * LevelData.size) * 4;
-
-        Vector2 uvPos = getUVPosition(id);
-
-        List<Vector2> mesh_uvs = uvs[0];
-
-        mesh_uvs[posInArray] = uvPos; // bottom left corner
-        mesh_uvs[posInArray + 1] = uvPos + Vector2.right * LevelData.tileSize; // bottom right corner
-        mesh_uvs[posInArray + 2] = uvPos + Vector2.up * LevelData.tileSize;    // top left corner
-        mesh_uvs[posInArray + 3] = uvPos + Vector2.one * LevelData.tileSize; // top right corner
-
-        uvsChanged[0] = true;
+        setUVAt(0, x, y, id, Orientation.north, false);
     }
 
     public void setUVAt(int uvID, int x, int y, int id, Orientation orientation, bool flipped) // position in bottom left corner of face
     {
 
-        int posInArray = (x + y * LevelData.size) * 4;
+        int posInArray = (x + y * sizeX) * 4;
 
         Vector2 uvPos = getUVPosition(id);
 
