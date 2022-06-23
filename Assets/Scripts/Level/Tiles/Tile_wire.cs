@@ -9,6 +9,7 @@ public class Tile_wire : Tile
     public override byte[] metadata { set; get; } = { 3, 0, 9, 0, 54};
 
     public Tile_wire(Vector2Int position) : base(position) { }
+    public Tile_wire(Vector2Int position, byte[] metadata) : base(position, metadata) { }
 
     public override void setPowered(bool state)
     {

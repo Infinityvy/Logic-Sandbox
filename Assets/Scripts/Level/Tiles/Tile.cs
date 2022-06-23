@@ -48,6 +48,12 @@ public abstract class Tile
         this.position = position;
     }
 
+    protected Tile(Vector2Int position, byte[] metadata)
+    {
+        this.position = position;
+        this.metadata = (byte[])metadata.Clone();
+    }
+
 
     public bool getPowered()
     {
@@ -102,7 +108,7 @@ public abstract class Tile
         {
             Tile neighbour = getNeighbourByIndex(i);
             if (neighbour == null) continue;
-            if (LogicManager.isOutputID(metadata[i]) && neighbour.getPowered() && LogicManager.isInputID(neighbour.metadata[(i + 2) % 4])) // checks if this tile is outputting into neighbour tiles input
+            if (LogicManager.isOutputID(metadata[i]) && (neighbour.getPowered() || neighbour is Tile_wire) && LogicManager.isInputID(neighbour.metadata[(i + 2) % 4])) // checks if this tile is outputting into neighbour tiles input
             {
                 neighbour.isConnectedToPowerSource();
             }

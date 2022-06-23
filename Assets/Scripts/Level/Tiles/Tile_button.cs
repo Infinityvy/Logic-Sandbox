@@ -9,6 +9,7 @@ public class Tile_button : Tile
     public override byte[] metadata { set; get; } = { 0, 0, 9, 0 };
 
     public Tile_button(Vector2Int position) : base(position) { }
+    public Tile_button(Vector2Int position, byte[] metadata) : base(position, metadata) { }
 
     public override void setPowered(bool state)
     {

@@ -56,12 +56,11 @@ public class LevelMesh : MonoBehaviour
         {
             for (int x = 0; x < sizeX; x++)
             {
-                addFace(x + gapSize, y + gapSize);
+                addFace(x + gapSize * x, y + gapSize * y);
             }
         }
 
         loadMesh();
-        Debug.Log(vertices.Count);
         flushTemporaryFields();
 
         for (int x = 0; x < sizeX; x++)

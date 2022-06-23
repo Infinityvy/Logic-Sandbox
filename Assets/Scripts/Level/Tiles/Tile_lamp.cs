@@ -9,4 +9,5 @@ public class Tile_lamp : Tile
     public override byte[] metadata { set; get; } = {11, 13, 13, 11 };
 
     public Tile_lamp(Vector2Int position) : base(position) { }
+    public Tile_lamp(Vector2Int position, byte[] metadata) : base(position, metadata) { }
 }

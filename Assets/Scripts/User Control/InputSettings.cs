@@ -15,6 +15,7 @@ public static class InputSettings
     public static KeyCode place = KeyCode.Mouse0;
     public static KeyCode interact = KeyCode.Space;
     public static KeyCode remove = KeyCode.Mouse1;
+    public static KeyCode edit = KeyCode.LeftShift;
 
     public static KeyCode[] numbers =
     {
