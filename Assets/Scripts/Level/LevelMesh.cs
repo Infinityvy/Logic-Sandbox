@@ -8,12 +8,13 @@ public class LevelMesh : MonoBehaviour
 
     public UnityEngine.Rendering.IndexFormat indexFormat;
 
-    public List<Vector3> vertices;
-    public List<int> triangles;
+    public Vector3[] vertices;
+    public int[] triangles;
 
-    List<Vector2>[] uvs = new List<Vector2>[5];
+    Vector2[][] uvMaps = new Vector2[5][];
 
     private int vertexIndex = 0;
+    private int triangleIndex = 0;
     private int sizeX, sizeY;
 
     private bool[] uvsChanged = {false, false, false, false, false };
@@ -31,7 +32,7 @@ public class LevelMesh : MonoBehaviour
         {
             if(uvsChanged[i])
             {
-                mesh.SetUVs(i, uvs[i]);
+                mesh.SetUVs(i, uvMaps[i]);
                 uvsChanged[i] = false;
             }
         }
@@ -47,10 +48,10 @@ public class LevelMesh : MonoBehaviour
         sizeX = world.GetLength(0);
         sizeY = world.GetLength(1);
 
-        vertices = new List<Vector3>();
-        triangles = new List<int>();
+        vertices = new Vector3[sizeX * sizeY * 4];
+        triangles = new int[(int)(vertices.Length * 1.5f)];
 
-        for (int i = 0; i < uvs.Length; i++) uvs[i] = new List<Vector2>();
+        for (int i = 0; i < uvMaps.Length; i++) uvMaps[i] = new Vector2[vertices.Length];
 
         for (int y = 0; y < sizeY; y++)
         {
@@ -82,13 +83,13 @@ public class LevelMesh : MonoBehaviour
 
     private void loadMesh()
     {
-        mesh.vertices = vertices.ToArray();
-        mesh.triangles = triangles.ToArray();
+        mesh.vertices = vertices;
+        mesh.triangles = triangles;
 
 
-        for(int i = 0; i < uvs.Length; i++)
+        for(int i = 0; i < uvMaps.Length; i++)
         {
-            mesh.SetUVs(i, uvs[i]);
+            mesh.SetUVs(i, uvMaps[i]);
         }
 
         mesh.RecalculateNormals();
@@ -97,35 +98,36 @@ public class LevelMesh : MonoBehaviour
 
     private void flushTemporaryFields()
     {
-        vertices.Clear();
-        triangles.Clear();
+        vertices = null;
+        triangles = null;
         vertexIndex = 0;
+        triangleIndex = 0;
     }
 
     private void addFace(float x, float y) //adds a new face on 2D plane; x and y are bottom left corner
     {
-        vertices.Add(new Vector3(x, 0, y));
-        vertices.Add(new Vector3(x + 1, 0, y));
-        vertices.Add(new Vector3(x, 0, y + 1));
-        vertices.Add(new Vector3(x + 1, 0, y + 1));
+        vertices[vertexIndex] = new Vector3(x, 0, y);
+        vertices[vertexIndex + 1] = new Vector3(x + 1, 0, y);
+        vertices[vertexIndex + 2] = new Vector3(x, 0, y + 1);
+        vertices[vertexIndex + 3] = new Vector3(x + 1, 0, y + 1);
         
-        triangles.Add(vertexIndex);
-        triangles.Add(vertexIndex + 2);
-        triangles.Add(vertexIndex + 1);
-        triangles.Add(vertexIndex + 2);
-        triangles.Add(vertexIndex + 3);
-        triangles.Add(vertexIndex + 1);
+        triangles[triangleIndex++] = vertexIndex;
+        triangles[triangleIndex++] = vertexIndex + 2;
+        triangles[triangleIndex++] = vertexIndex + 1;
+        triangles[triangleIndex++] = vertexIndex + 2;
+        triangles[triangleIndex++] = vertexIndex + 3;
+        triangles[triangleIndex++] = vertexIndex + 1;
+
+
+        for(int i = 0; i < uvMaps.Length; i++)
+        {
+            uvMaps[i][vertexIndex] = Vector2.zero;
+            uvMaps[i][vertexIndex + 1] = Vector2.zero;
+            uvMaps[i][vertexIndex + 2] = Vector2.zero;
+            uvMaps[i][vertexIndex + 3] = Vector2.zero;
+        }
 
         vertexIndex += 4;
-
-
-        for(int i = 0; i < uvs.Length; i++)
-        {
-            uvs[i].Add(Vector2.zero);
-            uvs[i].Add(Vector2.zero);
-            uvs[i].Add(Vector2.zero);
-            uvs[i].Add(Vector2.zero);
-        }
     }
 
     public void setUVAt(int x, int y, int id) // position in bottom left corner of face
@@ -140,7 +142,7 @@ public class LevelMesh : MonoBehaviour
 
         Vector2 uvPos = getUVPosition(id);
 
-        List<Vector2> mesh_uvs = uvs[uvID];
+        Vector2[] mesh_uvs = uvMaps[uvID];
 
         switch(orientation)
         {
