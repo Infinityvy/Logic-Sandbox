@@ -6,8 +6,6 @@ public class Tile_empty : Tile
 {
     public override byte id { get; protected set; } = 0;
 
-    public override byte[] metadata { set; get; } = {0, 0, 0, 0 };
-
     public Tile_empty(Vector2Int position) : base(position) { }
 
     public Tile_empty(Vector2Int position, byte[] old_metadata) : base(position)
@@ -29,7 +27,7 @@ public class Tile_empty : Tile
         {
             Tile neighbour = getNeighbourByIndex(i);
             if (neighbour == null) continue;
-            if (LogicManager.isOutputID(old_metadata[i]) && neighbour.getPowered() && LogicManager.isInputID(neighbour.metadata[(i + 2) % 4]))
+            if (old_metadata[i] == 2 && neighbour.getPowered() && neighbour.metadata[(i + 2) % 4] == 1)
             {
                 neighbour.isConnectedToPowerSource();
             }

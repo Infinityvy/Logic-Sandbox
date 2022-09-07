@@ -4,9 +4,11 @@ using UnityEngine;
 
 public abstract class Tile
 {
-    public virtual byte id { get; protected set; }
+    public virtual byte id { get; protected set; } = 64;
+    public virtual byte simpleID { get; } = 255; //same as ui_tile's spriteID
 
-    public virtual byte[] metadata { get; set; }
+    public virtual byte[] metadata { get; set; } = { 0, 0, 0, 0}; //0: nothing; 1: input; 2: output
+    public virtual byte[] ioIDs { get; } //input and output sprite IDs in that order (length of 2)
 
     protected bool powered // automatically updates visuals upon being set
     {
@@ -16,25 +18,14 @@ public abstract class Tile
             if(value && !powered)
             {
                 id++;
-                for (int i = 0; i < 4; i++)
-                {
-                    if (metadata[i] != 0) metadata[i]++;
-                }
-
-                BuildController.active.setTile(position, this);
             }
             else if(!value && powered)
             {
                 id--;
-                for(int i = 0; i < 4; i++)
-                {
-                    if(metadata[i] != 0) metadata[i]--;
-                }
-
-                BuildController.active.setTile(position, this);
             }
 
             poweredStorage = value;
+            BuildController.active.setTile(position, this);
         }
     }
     private bool poweredStorage = false;
@@ -70,7 +61,7 @@ public abstract class Tile
             {
                 Tile neighbour = getNeighbourByIndex(i);
                 if (neighbour == null) continue;
-                if (LogicManager.isOutputID(metadata[i]) && (!neighbour.getPowered() || neighbour is Tile_wire) && LogicManager.isInputID(neighbour.metadata[(i + 2) % 4])) // checks if this tile output at i and neighbour has input at opposite of i
+                if (metadata[i] == 2 && (!neighbour.getPowered() || neighbour is Tile_wire) && neighbour.metadata[(i + 2) % 4] == 1) // checks if this tile has output at i and neighbour has input at opposite of i
                 {
                     neighbour.setPowered(true);
                 }
@@ -90,7 +81,7 @@ public abstract class Tile
         {
             Tile neighbour = getNeighbourByIndex(i);
             if (neighbour == null) continue;
-            if (LogicManager.isInputID(metadata[i]) && neighbour.getPowered() && LogicManager.isOutputID(neighbour.metadata[(i + 2) % 4])) // checks if this tile has input at i and neighbour has output at opposite of i
+            if (metadata[i] == 1 && neighbour.getPowered() && neighbour.metadata[(i + 2) % 4] == 2) // checks if this tile has input at i and neighbour has output at opposite of i
             {
                 if (neighbour.tagged) powered = true;
 
@@ -108,7 +99,7 @@ public abstract class Tile
         {
             Tile neighbour = getNeighbourByIndex(i);
             if (neighbour == null) continue;
-            if (LogicManager.isOutputID(metadata[i]) && (neighbour.getPowered() || neighbour is Tile_wire) && LogicManager.isInputID(neighbour.metadata[(i + 2) % 4])) // checks if this tile is outputting into neighbour tiles input
+            if (metadata[i] == 2 && (neighbour.getPowered() || neighbour is Tile_wire) && neighbour.metadata[(i + 2) % 4] == 1) // checks if this tile is outputting into neighbour tiles input
             {
                 neighbour.isConnectedToPowerSource();
             }
@@ -123,7 +114,7 @@ public abstract class Tile
         {
             Tile neighbour = getNeighbourByIndex(i);
             if (neighbour == null) continue;
-            if (LogicManager.isInputID(metadata[i]) && neighbour.getPowered() && LogicManager.isOutputID(neighbour.metadata[(i + 2) % 4])) // checks if this tile input at i and neighbour has output at opposite of i
+            if (metadata[i] == 1 && neighbour.getPowered() && neighbour.metadata[(i + 2) % 4] == 2) // checks if this tile input at i and neighbour has output at opposite of i
             {
                 setPowered(true);
             }

@@ -4,9 +4,8 @@ using UnityEngine;
 
 public class UI_Tile
 {
-    public virtual int spriteID { get;}
-    protected byte[] metadata { get; set; } = { 0, 0, 0, 0 , 10};
-    public byte[] simple_metadata { get; set; } = { 0, 0, 0, 0};
+    public virtual int spriteID { get;} //same as Tile's simpleID
+    public byte[] metadata { get; set; } = { 0, 0, 0, 0 , 1};
 
     public virtual Tile getTile(Vector2Int position)
     {
@@ -21,32 +20,13 @@ public class UI_Tile
 
 public class UI_Tile_wire : UI_Tile
 {
-    public override int spriteID { get; } = 0;
+    public override int spriteID { get; } = 0; //same as Tile's simpleID
 
     public override Tile getTile(Vector2Int position)
     {
         Tile tile = new Tile_wire(position, metadata);
         tile.updatePowered();
         return tile;
-    }
-
-    public override void setWire(int index, byte state)
-    {
-        simple_metadata[index] = state;
-        switch(state)
-        {
-            case 0: //no wire
-                base.setWire(index, 0);
-                break;
-            case 1: //input
-                base.setWire(index, 3);
-                break;
-            case 2: //output
-                base.setWire(index, 9);
-                break;
-            default:
-                break;
-        }
     }
 
     public void setDelay(byte delay)
@@ -62,37 +42,18 @@ public class UI_Tile_wire : UI_Tile
 
 public class UI_Tile_lamp : UI_Tile
 {
-    public override int spriteID { get; } = 1;
+    public override int spriteID { get; } = 1; //same as Tile's simpleID
     public override Tile getTile(Vector2Int position)
     {
         Tile tile = new Tile_lamp(position, metadata);
         tile.updatePowered();
         return tile;
     }
-
-    public override void setWire(int index, byte state)
-    {
-        simple_metadata[index] = state;
-        switch (state)
-        {
-            case 0: //no wire
-                base.setWire(index, 0);
-                break;
-            case 1: //input
-                base.setWire(index, 11);
-                break;
-            case 2: //output
-                base.setWire(index, 13);
-                break;
-            default:
-                break;
-        }
-    }
 }
 
 public class UI_Tile_button : UI_Tile
 {
-    public override int spriteID { get; } = 2;
+    public override int spriteID { get; } = 2; //same as Tile's simpleID
     public override Tile getTile(Vector2Int position)
     {
         return new Tile_button(position, metadata);
@@ -100,17 +61,7 @@ public class UI_Tile_button : UI_Tile
 
     public override void setWire(int index, byte state)
     {
-        simple_metadata[index] = state;
-        switch (state)
-        {
-            case 0: //no wire
-                base.setWire(index, 0);
-                break;
-            case 1: //output
-                base.setWire(index, 9);
-                break;
-            default:
-                break;
-        }
+        if (state == 1) state = 2;
+        base.setWire(index, state);
     }
 }

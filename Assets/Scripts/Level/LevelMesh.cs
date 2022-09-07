@@ -40,11 +40,6 @@ public class LevelMesh : MonoBehaviour
 
     public void generateMesh(Tile[,] world)
     {
-        generateMesh(world, 0);
-    }
-
-    public void generateMesh(Tile[,] world, float gapSize)
-    {
         sizeX = world.GetLength(0);
         sizeY = world.GetLength(1);
 
@@ -57,9 +52,11 @@ public class LevelMesh : MonoBehaviour
         {
             for (int x = 0; x < sizeX; x++)
             {
-                addFace(x + gapSize * x, y + gapSize * y);
+                addFace(x, y);
             }
         }
+
+        //addFace(0, 0, sizeX);
 
         loadMesh();
         flushTemporaryFields();
@@ -68,13 +65,14 @@ public class LevelMesh : MonoBehaviour
         {
             for (int y = 0; y < sizeY; y++)
             {
-                setUVAt(x, y, world[x, y].id);
+                Tile tile = world[x, y];
 
-                byte[] metadata = world[x, y].metadata;
+                setUVAt(x, y, tile.id);
 
-                for (int i = 0; i < metadata.Length && i < 4; i++)
+
+                for (int i = 0; i < tile.metadata.Length && i < 4; i++)
                 {
-                    if (metadata[i] != 0) setUVAt(i + 1, x, y, metadata[i], (Orientation)i, i > 1);
+                    if (tile.metadata[i] != 0) setUVAt(i + 1, x, y, tile.ioIDs[tile.metadata[i] - 1] + (tile.getPowered() ? 1 : 0), (Orientation)i, i > 1);
                     else setUVAt(i + 1, x, y, 64, Orientation.north, false);
                 }
             }
@@ -119,13 +117,13 @@ public class LevelMesh : MonoBehaviour
         triangles[triangleIndex++] = vertexIndex + 1;
 
 
-        for(int i = 0; i < uvMaps.Length; i++)
-        {
-            uvMaps[i][vertexIndex] = Vector2.zero;
-            uvMaps[i][vertexIndex + 1] = Vector2.zero;
-            uvMaps[i][vertexIndex + 2] = Vector2.zero;
-            uvMaps[i][vertexIndex + 3] = Vector2.zero;
-        }
+        //for (int i = 0; i < uvMaps.Length; i++)
+        //{
+        //    uvMaps[i][vertexIndex] = Vector2.zero;
+        //    uvMaps[i][vertexIndex + 1] = Vector2.zero;
+        //    uvMaps[i][vertexIndex + 2] = Vector2.zero;
+        //    uvMaps[i][vertexIndex + 3] = Vector2.zero;
+        //}
 
         vertexIndex += 4;
     }

@@ -5,8 +5,9 @@ using UnityEngine;
 public class Tile_button : Tile
 {
     public override byte id { get; protected set; } = 7;
+    public override byte simpleID { get; } = 2; //same as ui_tile's spriteID
+    public override byte[] ioIDs { get; } = { 64, 15};
 
-    public override byte[] metadata { set; get; } = { 0, 0, 9, 0 };
 
     public Tile_button(Vector2Int position) : base(position) { }
     public Tile_button(Vector2Int position, byte[] metadata) : base(position, metadata) { }
@@ -27,7 +28,7 @@ public class Tile_button : Tile
             {
                 Tile neighbour = getNeighbourByIndex(i);
                 if (neighbour == null) continue;
-                if (LogicManager.isOutputID(metadata[i]) && (neighbour.getPowered() || neighbour is Tile_wire) && LogicManager.isInputID(neighbour.metadata[(i + 2) % 4])) // checks if this tile output at i and neighbour has input at opposite of i
+                if (metadata[i] == 2 && (neighbour.getPowered() || neighbour is Tile_wire) && neighbour.metadata[(i + 2) % 4] == 1) // checks if this tile output at i and neighbour has input at opposite of i
                 {
                     neighbour.isConnectedToPowerSource();
                 }

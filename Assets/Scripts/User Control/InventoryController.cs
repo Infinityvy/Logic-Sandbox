@@ -3,20 +3,29 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+[System.Serializable]
+public struct UI_Tile_Sprites
+{
+    public Sprite sprite;
+
+    public Sprite inputWireSprite;
+    public Sprite outputWireSprite;
+}
+
 public class InventoryController : MonoBehaviour
 {
     public static InventoryController active;
 
     public Transform selector;
-    public Sprite[] uiTileSprites;
+    public UI_Tile_Sprites[] uiTileSprites;
 
     private int selectedIndex = 0;
 
-    private UI_Tile[] ui_tiles = { new UI_Tile_button(), new UI_Tile_wire(), new UI_Tile_lamp()};
+    private UI_Tile[] ui_tiles = { new UI_Tile_wire(), new UI_Tile_lamp(), new UI_Tile_button()};
 
     private GameObject[] slots;
 
-    private GameObject slotEditDisplay;
+    private GameObject editModeDisplaySlot;
 
     private void Awake()
     {
@@ -29,14 +38,14 @@ public class InventoryController : MonoBehaviour
 
         for(int i = 0; i < slots.Length; i++)
         {
-            slots[i] = createSlot(i.ToString(), transform, uiTileSprites[ui_tiles[i].spriteID]);
+            slots[i] = createSlot(i.ToString(), transform, uiTileSprites[ui_tiles[i].spriteID].sprite);
         }
 
 
         selector.SetParent(slots[selectedIndex].transform, true);
         Invoke("resetSelector", 0.01f);
 
-        initSlotEditDisplay();
+        init_editModeDisplaySlot();
     }
 
     private void Update()
@@ -47,30 +56,38 @@ public class InventoryController : MonoBehaviour
 
     private void inventoryControls()
     {
-        if (Input.GetKey(InputSettings.edit))
+        if (Input.GetKey(InputSettings.edit)) //edit selected tile mode
         {
             PlayerCamera.frozen = true;
-            enabledSlotEditDisplay(ui_tiles[selectedIndex].spriteID);
+            enable_editModeDisplaySlot(selectedIndex);
 
             if (Input.GetKeyDown(InputSettings.up))
             {
-                byte data = ui_tiles[selectedIndex].simple_metadata[0];
+                byte data = ui_tiles[selectedIndex].metadata[0];
                 ui_tiles[selectedIndex].setWire(0, (byte)((data + 1) % 3));
+                updateSlotMetadataDisplay(selectedIndex);
+                updateSlotMetadataDisplay(selectedIndex, editModeDisplaySlot.transform);
             }
             if (Input.GetKeyDown(InputSettings.right))
             {
-                byte data = ui_tiles[selectedIndex].simple_metadata[1];
+                byte data = ui_tiles[selectedIndex].metadata[1];
                 ui_tiles[selectedIndex].setWire(1, (byte)((data + 1) % 3));
+                updateSlotMetadataDisplay(selectedIndex);
+                updateSlotMetadataDisplay(selectedIndex, editModeDisplaySlot.transform);
             }
             if (Input.GetKeyDown(InputSettings.down))
             {
-                byte data = ui_tiles[selectedIndex].simple_metadata[2];
+                byte data = ui_tiles[selectedIndex].metadata[2];
                 ui_tiles[selectedIndex].setWire(2, (byte)((data + 1) % 3));
+                updateSlotMetadataDisplay(selectedIndex);
+                updateSlotMetadataDisplay(selectedIndex, editModeDisplaySlot.transform);
             }
             if (Input.GetKeyDown(InputSettings.left))
             {
-                byte data = ui_tiles[selectedIndex].simple_metadata[3];
+                byte data = ui_tiles[selectedIndex].metadata[3];
                 ui_tiles[selectedIndex].setWire(3, (byte)((data + 1) % 3));
+                updateSlotMetadataDisplay(selectedIndex);
+                updateSlotMetadataDisplay(selectedIndex, editModeDisplaySlot.transform);
             }
 
 
@@ -85,28 +102,48 @@ public class InventoryController : MonoBehaviour
 
             return;
         }
-        else if (PlayerCamera.frozen)
+        else if (PlayerCamera.frozen) //unfreeze camera when exiting edit mode
         {
             PlayerCamera.frozen = false;
-            disableSlotEditDisplay();
+            disable_editModeDisplaySlot();
         }
 
         for(int i = 0; i < InputSettings.numbers.Length && i < ui_tiles.Length; i++)
         {
             if(Input.GetKeyDown(InputSettings.numbers[i]))
             {
-                selectedIndex = i;
-                selector.SetParent(slots[i].transform, true);
-                selector.localPosition = Vector3.zero;
-
+                setSelectedTile(i);
                 break;
             }
         }
+
+        if(Input.GetKeyDown(InputSettings.copy)) //copy hovered tile to selected tile
+        {
+            Tile hoveredTile = BuildController.active.hoveredTile;
+            if (hoveredTile is Tile_empty) return;
+
+            setSelectedTile(hoveredTile.simpleID);
+
+            ui_tiles[selectedIndex].metadata = (byte[])hoveredTile.metadata.Clone();
+            updateSlotMetadataDisplay(selectedIndex);
+        }
     }
 
-    public Tile GetSelectedTile(Vector2Int position)
+
+    private void setSelectedTile(int index)
     {
-        return ui_tiles[selectedIndex].getTile(position);
+        selectedIndex = index;
+        selector.SetParent(slots[index].transform, true);
+        selector.localPosition = Vector3.zero;
+    }
+    public Tile getSelectedTile(Vector2Int position) //this creates a new tile ready to be used
+    {
+        return ui_tiles[selectedIndex].getTile(position); 
+    }
+
+    public UI_Tile getSelectedUI_Tile() //this returns a reference to the selected ui_tile object for getting info about the selected tile without creating a new tile
+    {
+        return ui_tiles[selectedIndex];
     }
 
     private void selectorAnimator()
@@ -118,7 +155,7 @@ public class InventoryController : MonoBehaviour
 
     private GameObject createSlot(string index, Transform parent, Sprite sprite)
     {
-        GameObject slot = new GameObject("Slots" + index, typeof(Image));
+        GameObject slot = new GameObject("Slot" + index, typeof(Image));
 
         slot.transform.SetParent(parent, true);
         slot.GetComponent<Image>().sprite = sprite;
@@ -126,26 +163,66 @@ public class InventoryController : MonoBehaviour
         return slot;
     }
 
-    #region SlotEditDisplay
-
-    private void initSlotEditDisplay()
+    private GameObject createDisplayWire(string index, Transform parent, Sprite sprite, Orientation orientation)
     {
-        slotEditDisplay = createSlot("EditDisplay", transform.parent, uiTileSprites[ui_tiles[0].spriteID]);
+        GameObject wire = new GameObject("Wire" + index, typeof(Image));
 
-        slotEditDisplay.GetComponent<Image>().enabled = false;
-        slotEditDisplay.transform.localPosition = Vector3.zero;
-        slotEditDisplay.transform.localScale = new Vector3(2.5f, 2.5f, 2.5f);
+        wire.transform.SetParent(parent, false);
+        wire.transform.rotation = Quaternion.Euler(0, 0, -90f * (int)orientation);
+        wire.GetComponent<Image>().sprite = sprite;
+        wire.GetComponent<RectTransform>().sizeDelta = parent.GetComponent<RectTransform>().sizeDelta;
+
+        if ((int)orientation > 1) wire.transform.localScale = new Vector3(-1, 1, 1);
+
+        return wire;
     }
 
-    private void enabledSlotEditDisplay(int spriteID)
+    private void updateSlotMetadataDisplay(int index)
     {
-        slotEditDisplay.GetComponent<Image>().enabled = true;
-        slotEditDisplay.GetComponent<Image>().sprite = uiTileSprites[spriteID];
+        updateSlotMetadataDisplay(index, slots[index].transform);
     }
 
-    private void disableSlotEditDisplay()
+    private void updateSlotMetadataDisplay(int index, Transform slot)
     {
-        slotEditDisplay.GetComponent<Image>().enabled = false;
+        UI_Tile ui_tile = ui_tiles[index];
+
+        foreach(Transform child in slot)
+        {
+            if (child.name != "InventorySelector") Destroy(child.gameObject);
+        }
+
+        for (int i = 0; i < 4; i++)
+        {
+            if(ui_tile.metadata[i] == 1) createDisplayWire(i.ToString(), slot, uiTileSprites[index].inputWireSprite, (Orientation)i);
+            else if(ui_tile.metadata[i] == 2) createDisplayWire(i.ToString(), slot, uiTileSprites[index].outputWireSprite, (Orientation)i);
+        }
+    }
+
+    #region editModeDisplaySlot
+
+    private void init_editModeDisplaySlot()
+    {
+        editModeDisplaySlot = createSlot("EditDisplay", transform.parent, uiTileSprites[ui_tiles[0].spriteID].sprite);
+
+        editModeDisplaySlot.GetComponent<Image>().enabled = false;
+        editModeDisplaySlot.transform.localPosition = Vector3.zero;
+        editModeDisplaySlot.transform.localScale = new Vector3(2.5f, 2.5f, 2.5f);
+    }
+
+    private void enable_editModeDisplaySlot(int index)
+    {
+        editModeDisplaySlot.GetComponent<Image>().enabled = true;
+        editModeDisplaySlot.GetComponent<Image>().sprite = uiTileSprites[ui_tiles[index].spriteID].sprite;
+        updateSlotMetadataDisplay(index, editModeDisplaySlot.transform);
+    }
+
+    private void disable_editModeDisplaySlot()
+    {
+        editModeDisplaySlot.GetComponent<Image>().enabled = false;
+        foreach(Transform child in editModeDisplaySlot.transform)
+        {
+            Destroy(child.gameObject);
+        }
     }
 
     #endregion
@@ -153,18 +230,5 @@ public class InventoryController : MonoBehaviour
     private void resetSelector()
     {
         selector.localPosition = Vector3.zero;
-    }
-}
-
-public static class MySystem
-{
-    public static Transform getChildByName(this Transform tr, string name)
-    {
-        for (int i = 0; i < tr.childCount; i++)
-        {
-            if (tr.GetChild(i).name == name) return tr.GetChild(i);
-        }
-
-        return null;
     }
 }

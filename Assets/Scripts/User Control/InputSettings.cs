@@ -16,6 +16,7 @@ public static class InputSettings
     public static KeyCode interact = KeyCode.Space;
     public static KeyCode remove = KeyCode.Mouse1;
     public static KeyCode edit = KeyCode.LeftShift;
+    public static KeyCode copy = KeyCode.C;
 
     public static KeyCode[] numbers =
     {

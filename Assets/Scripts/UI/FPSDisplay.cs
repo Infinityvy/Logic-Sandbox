@@ -7,8 +7,15 @@ public class FPSDisplay : MonoBehaviour
 {
     public TextMeshProUGUI textMesh;
 
+    private string text;
+
+    private void FixedUpdate()
+    {
+        textMesh.text = text;
+    }
+
     void Update()
     {
-        textMesh.text = ((int)(1 / Time.deltaTime)).ToString();
+        text = ((int)(1 / Time.deltaTime)).ToString();
     }
 }

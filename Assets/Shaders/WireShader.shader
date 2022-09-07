@@ -76,7 +76,6 @@ Shader "Unlit/WireShader"
 
 
                 return baseTex;
-                //return float4(i.uv.xy, 0, 1);
            }
 
            ENDHLSL
