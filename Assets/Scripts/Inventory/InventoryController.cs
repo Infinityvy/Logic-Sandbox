@@ -159,6 +159,7 @@ public class InventoryController : MonoBehaviour
 
         slot.transform.SetParent(parent, true);
         slot.GetComponent<Image>().sprite = sprite;
+        slot.transform.localScale *= transform.parent.localScale.x * 2;
 
         return slot;
     }
